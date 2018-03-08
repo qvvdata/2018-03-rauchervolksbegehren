@@ -166,22 +166,31 @@ cat(getwd())
 options(scipen=999)
 
 #Analyse
-analysis <- data %>% left_join(unterstuetzungen, by=c("gkz", "gkz")) %>%
-    mutate(quantile = ntile(pct, 100))
+analysis <- unterstuetzungen_8_3 %>%
+            subset(klasse == "gem")
+
+analysis <- analysis %>% left_join(data, by=c("gkz", "gkz")) %>%
+    mutate(
+      pct = Unterstützungen/Wahlberechtigte*100, 
+      quantile = ntile(pct, 100))
 
 analysis_r <- analysis %>%
-  group_by(UR_TYP) %>%
-  summarise(usum = sum(unterstützungen), 
-            vwb = sum(wb)) %>%
+  group_by(typ) %>%
+  summarise(usum = sum(Unterstützungen), 
+            vwb = sum(Wahlberechtigte)) %>%
   mutate(`Anteil der Unterstützer` = (usum/vwb)*100)
 
 analysis_t <- analysis %>%
   group_by() %>%
-  summarise(usum = sum(unterstützungen), 
-            vwb = sum(wb)) %>%
+  summarise(usum = sum(Unterstützungen), 
+            vwb = sum(Wahlberechtigte)) %>%
   mutate(`Anteil der Unterstützer` = (usum/vwb)*100)%>%
   mutate(typ = "Österreich gesamt")
 
+analysis_r$typ[analysis_r$typ=="1"] <-"Urbane Zentren"
+analysis_r$typ[analysis_r$typ=="2"] <-"Regionale Zentren"
+analysis_r$typ[analysis_r$typ=="3"] <-"Ländliche Vororte"
+analysis_r$typ[analysis_r$typ=="4"] <-"Ländlicher Raum"
 
 analysis_r <- plyr::rbind.fill(analysis_r,analysis_t)
 
@@ -190,14 +199,28 @@ write.csv2(analysis_r, "output/datawrapper/analysis_r.csv")
 
 analysis_gem <- analysis %>%
   mutate(tkbl = (fpoe+oevp)/gültig*100) %>%
-  select(gkz, unterstützungen, wb, pct, 'name.x', tkbl)%>%
-  rename(Name = 'name.x', 
+  select(gkz, Unterstützungen, Wahlberechtigte, pct, Name, tkbl)%>%
+  rename( 
          Anteil = pct, 
-         Wahlberechtigte = wb, 
-         Unterstützer = unterstützungen, 
+         Unterstützer = Unterstützungen, 
          `türkis/blau-Anteil` = tkbl) %>%
-  mutate(Anteil = round(Anteil, 2))
-write.xlsx(analysis_gem, "output/datawrapper/analysis_gem.xlsx")
+  mutate(Anteil = round(Anteil, 2))%>%
+  select(gkz, Anteil, Unterstützer, Wahlberechtigte,Name)
+write.csv2(analysis_gem, "output/datawrapper/analysis_gem.csv")
+
+#Bundesländer berechnen
+bl  <- unterstuetzungen_8_3 %>%
+            subset(klasse == "bl" | gkz == "90001")%>%
+  mutate(pct= Unterstützungen/Wahlberechtigte*100)
+
+#Wiener Bundesländer
+wbez <- unterstuetzungen_8_3 %>%
+            subset(gkz>90001)%>%
+  mutate(pct= Unterstützungen/Wahlberechtigte*100)%>%
+  select(c(Name, pct))
+write.csv2(wbez, "output/datawrapper/wbez.csv")
+
+
 
 ```
 
