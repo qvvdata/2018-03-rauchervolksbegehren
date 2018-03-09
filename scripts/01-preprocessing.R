@@ -37,12 +37,28 @@ unterstuetzungen_8_3 <- read_excel("input/statistik_61.xlsx")%>%
 
 
 #check der datenintegrität
+#Bezirke aufgrund von Status Wiens als Bezirk und Gemeinde nicht übereinstimmend
+
 unterstuetzungen_8_3_check <- unterstuetzungen_8_3%>%
   group_by(klasse)%>%
   summarise(sumwb = sum(Wahlberechtigte), 
             sumunt = sum(Unterstützungen))
 
-#Bezirke aufgrund von Status Wiens als Bezirk und Gemeinde nicht übereinstimmend
+#Daten des Frauenvolksbegehrens reinladen
+fvb_8_3 <- read_excel("input/frauenvolksbegehren08032018.xlsx")%>%
+  mutate(gkz = gsub('G', '', GKZ), 
+         number = nchar(gkz))%>%
+  subset(number ==5)%>%
+  select(-GKZ)%>%
+  mutate(type1 = substr(gkz, 4, 5), 
+         type2= substr(gkz,2,5), 
+         type3 = substr(gkz,4,5)) %>%
+  numerize(vars = c("Name", "klasse", "type2", "typ3")) %>%
+  mutate(klasse =  if_else(Name == "Österreich", "at",
+                           if_else(gkz == 90001, "bl",
+                                   if_else(type2 == "0000" & Name !="Österreich", "bl",
+                                           if_else(type2!="0000" & type1 == 0, "bez","gem"))))) 
+
 
 nrw2017 <- read_csv("input/nrw2017.csv")%>%
   numerize(vars = c("name"))%>%
@@ -57,4 +73,6 @@ urbanrural <- read_excel("input/urbanrural.xlsx", sheet="data")%>%
 data <- nrw2017 %>% left_join(urbanrural, by=c("gkz_neu"="gkz"))%>%
   rename(gkz = gkz_neu)
 
-
+#Volksbegehren von 1997 reinladen
+fvb97 <- read_excel("input/volksbegehren97.xls") %>%
+  numerize(vars = c("bezirk", "lh")) 

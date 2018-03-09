@@ -213,7 +213,7 @@ bl  <- unterstuetzungen_8_3 %>%
             subset(klasse == "bl" | gkz == "90001")%>%
   mutate(pct= Unterstützungen/Wahlberechtigte*100)
 
-#Wiener Bundesländer
+#Wiener Bezirke
 wbez <- unterstuetzungen_8_3 %>%
             subset(gkz>90001)%>%
   mutate(pct= Unterstützungen/Wahlberechtigte*100)%>%
@@ -242,6 +242,83 @@ round(corrdf, digits=2)
 corrdf <- as.data.frame(corrdf)
 corrdf2018 <- corrdf2018 %>%
             subset(select=c(oevppct, spoepct, gruenepct, fpoepct, neospct, sonstigepct))
+```
+#Frauenvolksbegehren analysieren
+
+```{r}
+#Analyse
+analysis_fvb <- fvb_8_3 %>%
+            subset(klasse == "gem")
+
+analysis_fvb <- analysis_fvb %>% left_join(data, by=c("gkz", "gkz")) %>%
+    mutate(
+      pct = Unterstützungen/Wahlberechtigte*100, 
+      quantile = ntile(pct, 100))
+
+analysis_fvb_r <- analysis_fvb %>%
+  group_by(typ) %>%
+  summarise(usum = sum(Unterstützungen), 
+            vwb = sum(Wahlberechtigte)) %>%
+  mutate(`Anteil der Unterstützer` = (usum/vwb)*100)
+
+analysis_fvb_t <- analysis_fvb %>%
+  group_by() %>%
+  summarise(usum = sum(Unterstützungen), 
+            vwb = sum(Wahlberechtigte)) %>%
+  mutate(`Anteil der Unterstützer` = (usum/vwb)*100)%>%
+  mutate(typ = "Österreich gesamt")
+
+analysis_fvb_r$typ[analysis_fvb_r$typ=="1"] <-"Urbane Zentren"
+analysis_fvb_r$typ[analysis_fvb_r$typ=="2"] <-"Regionale Zentren"
+analysis_fvb_r$typ[analysis_fvb_r$typ=="3"] <-"Ländliche Vororte"
+analysis_fvb_r$typ[analysis_fvb_r$typ=="4"] <-"Ländlicher Raum"
+
+analysis_fvb_r <- plyr::rbind.fill(analysis_fvb_r,analysis_fvb_t)
+
+
+write.csv2(analysis_fvb_r, "output/datawrapper/analysis_fvb_r.csv")
+
+analysis_fvb_gem <- analysis_fvb %>%
+  mutate(tkbl = (fpoe+oevp)/gültig*100) %>%
+  select(gkz, Unterstützungen, Wahlberechtigte, pct, Name, tkbl)%>%
+  rename( 
+         Anteil = pct, 
+         Unterstützer = Unterstützungen, 
+         `türkis/blau-Anteil` = tkbl) %>%
+  mutate(Anteil = round(Anteil, 2))%>%
+  select(gkz, Anteil, Unterstützer, Wahlberechtigte,Name)
+write.csv2(analysis_fvb_gem, "output/datawrapper/analysis_fvb_gem.csv")
+
+#Bundesländer berechnen
+bl_fvb  <- fvb_8_3 %>%
+            subset(klasse == "bl" | gkz == "90001")%>%
+  mutate(pct= Unterstützungen/Wahlberechtigte*100)
+
+#Wiener Bundesländer
+wbez_fvb <- fvb_8_3 %>%
+            subset(gkz>90001)%>%
+  mutate(pct= Unterstützungen/Wahlberechtigte*100)%>%
+  select(c(Name, pct))
+write.csv2(wbez_fvb, "output/datawrapper/wbez_fvb.csv")
+
+#Bezirksanalyse mit 1994
+fvbbez <- fvb_8_3 %>%
+            subset(klasse =="bez" | gkz=="90001")%>%
+          mutate(bkz = substr(gkz, 1, 3))%>%
+  numerize(vars = c("Name", "klasse")) 
+
+fvbbez_altneu <- fvb97 %>% left_join(fvbbez, by=c("bkz", "bkz")) %>%
+  na.omit() %>%
+    mutate(
+      pct97 = frauengueltig/wb*100, 
+      pct18 = Unterstützungen/Wahlberechtigte*100)%>%
+      select(Name, pct97, pct18, Wahlberechtigte,lh)
+
+write.csv2(fvbbez_altneu, "output/datawrapper/fvbbez_altneu.csv")
+
+write.csv2(analysis_fvb_gem, "output/datawrapper/analysis_fvb_gem_alle.csv")
+
+fvb97
 ```
 
 
