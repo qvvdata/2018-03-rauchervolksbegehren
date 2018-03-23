@@ -206,7 +206,32 @@ analysis_gem <- analysis %>%
          `türkis/blau-Anteil` = tkbl) %>%
   mutate(Anteil = round(Anteil, 2))%>%
   select(gkz, Anteil, Unterstützer, Wahlberechtigte,Name)
+
+
+#Hier werden nun klassen für analysis_gem zugewiesen
+
+einheiten <- seq(0.1,1,0.1)
+
+teiler <- quantile(analysis_gem$Anteil,probs=einheiten)
+
+analysis_gem$cut <- cut(analysis_gem$Anteil,
+                        breaks=c(0,teiler),
+                        labels=paste(seq(10,100,10),"%",sep=""),
+                        include.lowest=TRUE)
+
+analysis_gem$klasse <- analysis_gem$cut
+
+analysis_gem <- analysis_gem %>%
+  mutate(klasse = gsub('%', '', klasse))%>%
+  numerize(vars = c("Name", "cut"))%>%
+  mutate(klasse =  if_else(klasse <=30, "unterdurchschnittlich",
+                                   if_else(klasse >= 40 & klasse <=60, "durchschnittlich",
+                                           if_else(klasse >= 60, "überdurchschnittlich","n.v.")))) %>%
+  rename(gkz_neu = gkz)
+  
+
 write.csv2(analysis_gem, "output/datawrapper/analysis_gem.csv")
+
 
 #Bundesländer berechnen
 bl  <- unterstuetzungen_8_3 %>%
