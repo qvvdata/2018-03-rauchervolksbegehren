@@ -129,10 +129,10 @@ if (!dir.exists("~/.checkpoint")) {
 # nolint end
 # install packages for the specified CRAN snapshot date
 checkpoint(snapshotDate = package_date,
-           project = path_to_wd,
-           verbose = T,
-           scanForPackages = T,
-           use.knitr = F)
+          project = path_to_wd,
+          verbose = T,
+          scanForPackages = T,
+          use.knitr = F)
 rm(package_date)
 ```
 
@@ -230,7 +230,7 @@ analysis_gem <- analysis_gem %>%
   rename(gkz_neu = gkz)
   
 
-write.csv2(analysis_gem, "output/datawrapper/analysis_gem.csv")
+write.csv(analysis_gem, "interaktiv/karte/dist/analysis_gem.csv",fileEncoding='UTF-8',row.names = F)
 
 
 #Bundesländer berechnen
@@ -265,8 +265,8 @@ corrdf <- cor(corrdf, use="pairwise.complete.obs")
 round(corrdf, digits=2)
 
 corrdf <- as.data.frame(corrdf)
-corrdf2018 <- corrdf2018 %>%
-            subset(select=c(oevppct, spoepct, gruenepct, fpoepct, neospct, sonstigepct))
+corrdf2018 <- corrdf %>%
+            subset(select=c(oevppct, spoepct, gruenepct, fpoepct, sonstigepct))
 ```
 #Frauenvolksbegehren analysieren
 
