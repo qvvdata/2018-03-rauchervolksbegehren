@@ -1,4 +1,4 @@
-needs(showtext)
+library(showtext)
 ##################
 # Notwendig für Schriftarten in Plots
 ##################
