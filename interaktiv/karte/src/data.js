@@ -9,7 +9,7 @@ maps['raucherbegehren'] = {
   value: 'Anteil',
   scale: 'quantile',
   colorschemes: [['#000'],
-            ['#c6dbef','#9ecae1','#6baed6','#3182bd','#08519c']
+            ['#D0CEDB','#B1ADC3','#938DAB','#746C93','#564C7C']
   ],
 
   tooltip: function(d, p, pctfmt, numfmt) {

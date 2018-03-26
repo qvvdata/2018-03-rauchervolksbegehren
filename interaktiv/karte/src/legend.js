@@ -76,7 +76,7 @@ legend['quantile'] = function(MAP) {
         `+ `${Math.min.apply(Math,alldata)} ` + MAP.colorschemes[1].map(
         (x,i) => {
             return `<span style="background: ${x}"></span>`;
-            }).join('')+` ${Math.max.apply(Math,alldata)} %`
+            }).join('')+` ${Math.round(Math.max.apply(Math,alldata))} %`
         return div;
     };
 
