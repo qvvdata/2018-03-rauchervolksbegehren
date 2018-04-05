@@ -20,7 +20,7 @@ unterstuetzungen <- read_excel("input/unterstuetzungen.xlsx",
                                "numeric"))%>%
   numerize(vars = c("name"))
 
-unterstuetzungen_8_3 <- read_excel("input/statistik_62.xlsx")%>%
+unterstuetzungen_8_3 <- read_excel("input/statistik_63.xlsx")%>%
   mutate(gkz = gsub('G', '', GKZ), 
          number = nchar(gkz))%>%
   subset(number ==5)%>%
