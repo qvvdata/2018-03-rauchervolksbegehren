@@ -128,11 +128,11 @@ if (!dir.exists("~/.checkpoint")) {
 }
 # nolint end
 # install packages for the specified CRAN snapshot date
-checkpoint(snapshotDate = package_date,
-          project = path_to_wd,
-          verbose = T,
-          scanForPackages = T,
-          use.knitr = F)
+# checkpoint(snapshotDate = package_date,
+#           project = path_to_wd,
+#           verbose = T,
+#           scanForPackages = T,
+#           use.knitr = F)
 rm(package_date)
 ```
 
@@ -171,18 +171,18 @@ analysis <- unterstuetzungen_8_3 %>%
 
 analysis <- analysis %>% left_join(data, by=c("gkz", "gkz")) %>%
     mutate(
-      pct = Unterstützungen/Wahlberechtigte*100, 
+      pct = Summe/Wahlberechtigte*100, 
       quantile = ntile(pct, 100))
 
 analysis_r <- analysis %>%
   group_by(typ) %>%
-  summarise(usum = sum(Unterstützungen), 
+  summarise(usum = sum(Summe), 
             vwb = sum(Wahlberechtigte)) %>%
   mutate(`Anteil der Unterstützer` = (usum/vwb)*100)
 
 analysis_t <- analysis %>%
   group_by() %>%
-  summarise(usum = sum(Unterstützungen), 
+  summarise(usum = sum(Summe), 
             vwb = sum(Wahlberechtigte)) %>%
   mutate(`Anteil der Unterstützer` = (usum/vwb)*100)%>%
   mutate(typ = "Österreich gesamt")
@@ -199,10 +199,10 @@ write.csv2(analysis_r, "output/datawrapper/analysis_r.csv")
 
 analysis_gem <- analysis %>%
   mutate(tkbl = (fpoe+oevp)/gültig*100) %>%
-  select(gkz, Unterstützungen, Wahlberechtigte, pct, Name, tkbl)%>%
+  select(gkz, Summe, Wahlberechtigte, pct, Name, tkbl)%>%
   rename( 
          Anteil = pct, 
-         Unterstützer = Unterstützungen, 
+         Unterstützer = Summe, 
          `türkis/blau-Anteil` = tkbl) %>%
   mutate(Anteil = round(Anteil, 2))%>%
   select(gkz, Anteil, Unterstützer, Wahlberechtigte,Name)
@@ -236,12 +236,12 @@ write.csv(analysis_gem, "interaktiv/karte/dist/analysis_gem.csv",fileEncoding='U
 #Bundesländer berechnen
 bl  <- unterstuetzungen_8_3 %>%
             subset(klasse == "bl" | gkz == "90001")%>%
-  mutate(pct= Unterstützungen/Wahlberechtigte*100)
+  mutate(pct= Summe/Wahlberechtigte*100)
 
 #Wiener Bezirke
 wbez <- unterstuetzungen_8_3 %>%
             subset(gkz>90001)%>%
-  mutate(pct= Unterstützungen/Wahlberechtigte*100)%>%
+  mutate(pct= Summe/Wahlberechtigte*100)%>%
   select(c(Name, pct))
 write.csv(wbez, "output/datawrapper/wbez.csv")
 
@@ -266,7 +266,7 @@ round(corrdf, digits=2)
 
 corrdf <- as.data.frame(corrdf)
 corrdf2018 <- corrdf %>%
-            subset(select=c(oevppct, spoepct, gruenepct, fpoepct, sonstigepct))
+            subset(select=c(oevppct, spoepct, gruenepct, fpoepct))
 ```
 #Frauenvolksbegehren analysieren
 
@@ -277,18 +277,18 @@ analysis_fvb <- fvb_8_3 %>%
 
 analysis_fvb <- analysis_fvb %>% left_join(data, by=c("gkz", "gkz")) %>%
     mutate(
-      pct = Unterstützungen/Wahlberechtigte*100, 
+      pct = Summe/Wahlberechtigte*100, 
       quantile = ntile(pct, 100))
 
 analysis_fvb_r <- analysis_fvb %>%
   group_by(typ) %>%
-  summarise(usum = sum(Unterstützungen), 
+  summarise(usum = sum(Summe), 
             vwb = sum(Wahlberechtigte)) %>%
   mutate(`Anteil der Unterstützer` = (usum/vwb)*100)
 
 analysis_fvb_t <- analysis_fvb %>%
   group_by() %>%
-  summarise(usum = sum(Unterstützungen), 
+  summarise(usum = sum(Summe), 
             vwb = sum(Wahlberechtigte)) %>%
   mutate(`Anteil der Unterstützer` = (usum/vwb)*100)%>%
   mutate(typ = "Österreich gesamt")
@@ -305,10 +305,10 @@ write.csv2(analysis_fvb_r, "output/datawrapper/analysis_fvb_r.csv")
 
 analysis_fvb_gem <- analysis_fvb %>%
   mutate(tkbl = (fpoe+oevp)/gültig*100) %>%
-  select(gkz, Unterstützungen, Wahlberechtigte, pct, Name, tkbl)%>%
+  select(gkz, Summe, Wahlberechtigte, pct, Name, tkbl)%>%
   rename( 
          Anteil = pct, 
-         Unterstützer = Unterstützungen, 
+         Unterstützer = Summe, 
          `türkis/blau-Anteil` = tkbl) %>%
   mutate(Anteil = round(Anteil, 2))%>%
   select(gkz, Anteil, Unterstützer, Wahlberechtigte,Name)
@@ -317,12 +317,12 @@ write.csv2(analysis_fvb_gem, "output/datawrapper/analysis_fvb_gem.csv")
 #Bundesländer berechnen
 bl_fvb  <- fvb_8_3 %>%
             subset(klasse == "bl" | gkz == "90001")%>%
-  mutate(pct= Unterstützungen/Wahlberechtigte*100)
+  mutate(pct= Summe/Wahlberechtigte*100)
 
 #Wiener Bundesländer
 wbez_fvb <- fvb_8_3 %>%
             subset(gkz>90001)%>%
-  mutate(pct= Unterstützungen/Wahlberechtigte*100)%>%
+  mutate(pct= Summe/Wahlberechtigte*100)%>%
   select(c(Name, pct))
 write.csv2(wbez_fvb, "output/datawrapper/wbez_fvb.csv")
 
@@ -336,7 +336,7 @@ fvbbez_altneu <- fvb97 %>% left_join(fvbbez, by=c("bkz", "bkz")) %>%
   na.omit() %>%
     mutate(
       pct97 = frauengueltig/wb*100, 
-      pct18 = Unterstützungen/Wahlberechtigte*100)%>%
+      pct18 = Summe/Wahlberechtigte*100)%>%
       select(Name, pct97, pct18, Wahlberechtigte,lh)
 
 write.csv2(fvbbez_altneu, "output/datawrapper/fvbbez_altneu.csv")

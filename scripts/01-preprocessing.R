@@ -1,4 +1,6 @@
 #rm(list=ls())
+library(tidyverse)
+library(readxl)
 
 numerize <- function(data,vars){
   data = as.data.frame(data)
@@ -14,13 +16,13 @@ numerize <- function(data,vars){
 source("scripts/BorderMan.R")
 
 
-unterstuetzungen <- read_excel("input/unterstuetzungen.xlsx", 
-                               col_types = c("text", "text", "numeric", 
-                                "numeric", "numeric", "numeric", 
-                               "numeric"))%>%
-  numerize(vars = c("name"))
+# unterstuetzungen <- read_excel("input/unterstuetzungen.xlsx", 
+#                                col_types = c("text", "text", "numeric", 
+#                                 "numeric", "numeric", "numeric", 
+#                                "numeric"))%>%
+#   numerize(vars = c("name"))
 
-unterstuetzungen_8_3 <- read_excel("input/statistik_63.xlsx")%>%
+unterstuetzungen_8_3 <- read_excel("input/rauchervolksbegehren_2018-10-05.xlsx")%>%
   mutate(gkz = gsub('G', '', GKZ), 
          number = nchar(gkz))%>%
   subset(number ==5)%>%
@@ -42,7 +44,8 @@ unterstuetzungen_8_3 <- read_excel("input/statistik_63.xlsx")%>%
 unterstuetzungen_8_3_check <- unterstuetzungen_8_3%>%
   group_by(klasse)%>%
   summarise(sumwb = sum(Wahlberechtigte), 
-            sumunt = sum(Unterstützungen))
+            sumunt = sum(Unterstützungen),
+            sumsum = sum(Summe))
 
 #Daten des Frauenvolksbegehrens reinladen
 fvb_8_3 <- read_excel("input/fvb_april.xlsx")%>%
