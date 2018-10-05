@@ -15,9 +15,11 @@ maps['raucherbegehren'] = {
   tooltip: function(d, p, pctfmt, numfmt) {
     if(d) {
       return `<strong>${p.name}</strong>: <br/>`
-        +`Unterstützer: ${numfmt(d['Unterstützer'])}<br />`
+        +`Unterschriften: ${numfmt(d['Unterschriften'])}<br />`
         +`Wahlberechtigte: ${numfmt(d['Wahlberechtigte'])}<br />`
-        +`Anteil: ${pctfmt(d['Anteil'])} %`
+        +`Anteil: <strong>${pctfmt(d['Anteil'])} %</strong><br />`
+        +`Steigerung in der Eintragungswoche: ${pctfmt(d['pct_diff'])}&nbsp;Prozentpunkte`
+
     } else {
       return `<strong>${p.name}, ${p.GKZ}</strong>: Keine Daten vorhanden`;
     }
