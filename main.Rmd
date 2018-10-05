@@ -243,7 +243,7 @@ wbez <- unterstuetzungen_8_3 %>%
             subset(gkz>90001)%>%
   mutate(pct= Unterstützungen/Wahlberechtigte*100)%>%
   select(c(Name, pct))
-write.csv2(wbez, "output/datawrapper/wbez.csv")
+write.csv(wbez, "output/datawrapper/wbez.csv")
 
 
 
@@ -348,6 +348,13 @@ fvb97
 
 
 ```{r}
+bl <- unterstuetzungen_8_3 %>%
+  arrange(desc(Wahlberechtigte)) %>%
+  top_n(10, Wahlberechtigte) %>%
+  mutate(pct = Unterstützungen/Wahlberechtigte*100)%>%
+  arrange(desc(pct))
+write.csv(bl, "output/datawrapper/bl.csv")
+
 #Visualisierungen
 
   # labs(title = "Schlagzeile", 
@@ -359,6 +366,109 @@ fvb97
 
 #Exportieren für Illustrator funktioniert nicht über ggsave (Schriften), sondern besser über Export des Plot-Viewers
 ```
+
+#ORF VOLKSBEGEHREN ANALYSEN
+```{r}
+#Analyse
+analysis_orf <- orf %>%
+            subset(klasse == "gem")
+
+analysis_orf <- analysis_orf %>% left_join(data, by=c("gkz", "gkz")) %>%
+    mutate(
+      pct = Summe/Wahlberechtigte*100,
+      pctu = Unterstützungen/Wahlberechtigte*100, 
+      pcte = Eintragungen/Wahlberechtigte*100,
+      quantile = ntile(pct, 100))
+
+analysis_orf_r <- analysis_orf %>%
+  group_by(typ) %>%
+  summarise(usum = sum(Unterstützungen),
+            esum = sum(`Eintragungen`),
+            sumsum = sum(Summe), 
+            vwb = sum(Wahlberechtigte)) %>%
+  mutate(`Anteil der Unterstützer` = (usum/vwb)*100, 
+         `Anteil der Eintragungen` = (esum/vwb)*100,
+         `Anteil gesamt` = (sumsum/vwb)*100, 
+          Steigerung = `Anteil gesamt`-`Anteil der Unterstützer`)
+
+analysis_orf_t <- analysis_orf %>%
+  group_by() %>%
+  summarise(usum = sum(Unterstützungen), 
+            esum = sum(`Eintragungen`),
+            sumsum = sum(Summe),
+            vwb = sum(Wahlberechtigte)) %>%
+  mutate(
+        `Anteil der Unterstützer` = (usum/vwb)*100, 
+         `Anteil der Eintragungen` = (esum/vwb)*100,
+         `Anteil gesamt` = (sumsum/vwb)*100, 
+          Steigerung = `Anteil gesamt`-`Anteil der Unterstützer`)%>%
+  mutate(typ = "Österreich gesamt")
+
+analysis_orf_r$typ[analysis_orf_r$typ=="1"] <-"Urbane Zentren"
+analysis_orf_r$typ[analysis_orf_r$typ=="2"] <-"Regionale Zentren"
+analysis_fvb_r$typ[analysis_orf_r$typ=="3"] <-"Ländliche Vororte"
+analysis_orf_r$typ[analysis_orf_r$typ=="4"] <-"Ländlicher Raum"
+
+analysis_orf_r <- plyr::rbind.fill(analysis_orf_r,analysis_orf_t)
+
+
+write.csv2(analysis_orf_r, "output/datawrapper/analysis_orf_r.csv")
+
+analysis_orf_gem <- analysis_orf %>%
+  mutate(tkbl = (fpoe+oevp)/gültig*100, 
+         Steigerung = pct-pctu) %>%
+  select(gkz, Eintragungen, Summe, Unterstützungen, Wahlberechtigte, pct, pctu, pcte, Name, tkbl, Steigerung, pctu)%>%
+  rename(
+         `Anteil gesamt`= pct,
+         `Anteil Unterstützungsphase` = pctu,
+         Unterstützer = Summe, 
+         `türkis/blau-Anteil` = tkbl
+         ) %>%
+  mutate(`Anteil gesamt` = round(`Anteil gesamt`, 2), 
+         Steigerung = round(Steigerung, 2), 
+         `Anteil Unterstützungsphase` = round(`Anteil Unterstützungsphase`,2)) %>%
+  select(gkz, `Anteil gesamt`, `Anteil Unterstützungsphase`, Unterstützer, Wahlberechtigte,Name, `türkis/blau-Anteil`, Steigerung)
+write.csv2(analysis_orf_gem, "output/datawrapper/analysis_orf_gem.csv")
+
+#Bundesländer berechnen
+bl_orf  <- orf %>%
+            subset(klasse == "bl" | gkz == "90001")%>%
+  mutate(pct= Summe/Wahlberechtigte*100)
+write.csv2(bl_orf, "output/datawrapper/bl_orf.csv")
+
+#Wiener bezirke
+wbez_orf <- analysis_orf %>%
+            subset(gkz>90001)%>%
+  mutate(pct= Summe/Wahlberechtigte*100)%>%
+  select(c(Name, pct))
+write.csv2(wbez_fvb, "output/datawrapper/wbez_orf.csv")
+
+
+write.csv2(analysis_orf_gem, "output/datawrapper/analysis_fvb_gem_alle.csv")
+
+
+
+#Korrelationen
+corrdf <- analysis_orf %>%
+  mutate(fpoepct = fpoe/gültig*100, 
+         spoepct = spoe/gültig*100, 
+         oevppct = oevp/gültig*100, 
+         gruenepct = gruene/gültig*100, 
+         tkbl = (fpoe+oevp)/gültig*100,
+         nw = (wb_nrw-abgegeben)/wb_nrw*100,
+         spgrneo = (spoe+gruene+neos)/gültig*100, 
+         wb = abgegeben/gültig*100) %>%
+select(gkz, pct, fpoepct, spoepct, oevppct, gruenepct, tkbl, spgrneo, wb, nw) %>%
+  na.omit()
+
+corrdf <- cor(corrdf, use="pairwise.complete.obs")
+round(corrdf, digits=2)
+
+corrdf <- as.data.frame(corrdf)
+corrdf2018 <- corrdf %>%
+            subset(select=c(oevppct, spoepct, gruenepct, fpoepct))
+```
+
 
 ## Linting
 
