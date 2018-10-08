@@ -22,7 +22,7 @@ source("scripts/BorderMan.R")
 #                                "numeric"))%>%
 #   numerize(vars = c("name"))
 
-unterstuetzungen_8_3 <- read_excel("input/rauchervolksbegehren_2018-10-05.xlsx")%>%
+rauchervolksbegehren <- read_excel("input/rauchervolksbegehren_2018-10-05.xlsx")%>%
   mutate(gkz = gsub('G', '', GKZ), 
          number = nchar(gkz))%>%
   subset(number ==5)%>%
@@ -41,7 +41,7 @@ unterstuetzungen_8_3 <- read_excel("input/rauchervolksbegehren_2018-10-05.xlsx")
 #check der datenintegrität
 #Bezirke aufgrund von Status Wiens als Bezirk und Gemeinde nicht übereinstimmend
 
-unterstuetzungen_8_3_check <- unterstuetzungen_8_3%>%
+rauchervolksbegehren_check <- rauchervolksbegehren%>%
   group_by(klasse)%>%
   summarise(sumwb = sum(Wahlberechtigte), 
             sumunt = sum(Unterstützungen),
@@ -73,7 +73,7 @@ urbanrural <- read_excel("input/urbanrural.xlsx", sheet="data")%>%
   numerize(vars = c("name", "urbantyp", "urbanländlich"))
 
 
-data <- nrw2017 %>% left_join(urbanrural, by=c("gkz_neu"="gkz"))%>%
+contextdata <- nrw2017 %>% left_join(urbanrural, by=c("gkz_neu"="gkz"))%>%
   rename(gkz = gkz_neu)
 
 #Volksbegehren von 1997 reinladen

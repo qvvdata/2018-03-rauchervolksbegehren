@@ -161,15 +161,17 @@ cat(getwd())
 
 
 
+## Rauchervolksbegehren
+
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 options(scipen=999)
 
 #Analyse
-analysis <- unterstuetzungen_8_3 %>%
+analysis_rvb <- rauchervolksbegehren %>%
             subset(klasse == "gem")
 
-analysis <- analysis %>% left_join(data, by=c("gkz", "gkz")) %>%
+analysis_rvb <- analysis_rvb %>% left_join(contextdata, by=c("gkz", "gkz")) %>%
     mutate(
       pct = Summe/Wahlberechtigte*100, 
       pct_u = Unterstützungen/Wahlberechtigte*100,
@@ -177,7 +179,8 @@ analysis <- analysis %>% left_join(data, by=c("gkz", "gkz")) %>%
       quantile = ntile(pct, 100),
       pct_diff = pct-pct_u,
       pct_plus = Unterstützungen/Summe*100)
-analysis_r <- analysis %>%
+
+analysis_rvb_r <- analysis_rvb %>%
   group_by(typ) %>%
   summarise(ssum = sum(Summe), 
             vwb = sum(Wahlberechtigte),
@@ -186,7 +189,7 @@ analysis_r <- analysis %>%
          `Anteil Gesamt` = (ssum/vwb)*100,
          Steigerung=`Anteil Gesamt`-`Anteil der Unterstützer`)
 
-analysis_t <- analysis %>%
+analysis_rvb_t <- analysis_rvb %>%
   group_by() %>%
   summarise(ssum = sum(Summe), 
             vwb = sum(Wahlberechtigte),
@@ -196,17 +199,17 @@ analysis_t <- analysis %>%
          Steigerung=`Anteil Gesamt`-`Anteil der Unterstützer`)%>%
   mutate(typ = "Österreich gesamt")
 
-analysis_r$typ[analysis_r$typ=="1"] <-"Urbane Zentren"
-analysis_r$typ[analysis_r$typ=="2"] <-"Regionale Zentren"
-analysis_r$typ[analysis_r$typ=="3"] <-"Ländliche Vororte"
-analysis_r$typ[analysis_r$typ=="4"] <-"Ländlicher Raum"
+analysis_rvb_r$typ[analysis_rvb_r$typ=="1"] <-"Urbane Zentren"
+analysis_rvb_r$typ[analysis_rvb_r$typ=="2"] <-"Regionale Zentren"
+analysis_rvb_r$typ[analysis_rvb_r$typ=="3"] <-"Ländliche Vororte"
+analysis_rvb_r$typ[analysis_rvb_r$typ=="4"] <-"Ländlicher Raum"
 
-analysis_r <- plyr::rbind.fill(analysis_r,analysis_t)
+analysis_rvb_r <- plyr::rbind.fill(analysis_rvb_r,analysis_rvb_t)
 
 
 write.csv2(analysis_r, "output/datawrapper/analysis_r.csv")
 
-analysis_gem <- analysis %>%
+analysis_rvb_gem <- analysis_rvb %>%
   mutate(tkbl = (fpoe+oevp)/gültig*100) %>%
   select(gkz, pct_diff, Summe, Wahlberechtigte, pct, Name, tkbl)%>%
   rename( 
@@ -221,16 +224,16 @@ analysis_gem <- analysis %>%
 
 einheiten <- seq(0.1,1,0.1)
 
-teiler <- quantile(analysis_gem$Anteil,probs=einheiten)
+teiler_rvb <- quantile(analysis_rvb_gem$Anteil,probs=einheiten)
 
-analysis_gem$cut <- cut(analysis_gem$Anteil,
-                        breaks=c(0,teiler),
+analysis_rvb_gem$cut <- cut(analysis_rvb_gem$Anteil,
+                        breaks=c(0,teiler_rvb),
                         labels=paste(seq(10,100,10),"%",sep=""),
                         include.lowest=TRUE)
 
-analysis_gem$klasse <- analysis_gem$cut
+analysis_rvb_gem$klasse <- analysis_rvb_gem$cut
 
-analysis_gem <- analysis_gem %>%
+analysis_rvb_gem <- analysis_rvb_gem %>%
   mutate(klasse = gsub('%', '', klasse))%>%
   numerize(vars = c("Name", "cut"))%>%
   mutate(klasse =  if_else(klasse <=30, "unterdurchschnittlich",
@@ -239,16 +242,16 @@ analysis_gem <- analysis_gem %>%
   rename(gkz_neu = gkz)
   
 
-write.csv(analysis_gem, "interaktiv/karte/dist/analysis_gem.csv",fileEncoding='UTF-8',row.names = F)
+write.csv(analysis_rvb_gem, "interaktiv/karte/dist/analysis_gem.csv",fileEncoding='UTF-8',row.names = F)
 
 
 #Bundesländer berechnen
-bl  <- unterstuetzungen_8_3 %>%
+bl_rvb  <- rauchervolksbegehren %>%
             subset(klasse == "bl" | gkz == "90001")%>%
   mutate(pct= Summe/Wahlberechtigte*100)
 
 #Wiener Bezirke
-wbez <- unterstuetzungen_8_3 %>%
+wbez_rvb <- rauchervolksbegehren %>%
             subset(gkz>90001)%>%
   mutate(pct= Summe/Wahlberechtigte*100)%>%
   select(c(Name, pct))
@@ -258,8 +261,9 @@ write.csv(wbez, "output/datawrapper/wbez.csv")
 
 ```
 
+
 ```{r}
-corrdf <- analysis %>%
+corrdf <- analysis_rvb %>%
   mutate(fpoepct = fpoe/gültig*100, 
          spoepct = spoe/gültig*100, 
          oevppct = oevp/gültig*100, 
@@ -270,13 +274,15 @@ corrdf <- analysis %>%
 select(gkz, pct, fpoepct, spoepct, oevppct, gruenepct, tkbl, spgrneo, wb) %>%
   na.omit()
 
-corrdf <- cor(corrdf, use="pairwise.complete.obs")
-round(corrdf, digits=2)
+corrdf_rvb <- cor(corrdf, use="pairwise.complete.obs")
+round(corrdf_rvb, digits=2)
 
-corrdf <- as.data.frame(corrdf)
-corrdf2018 <- corrdf %>%
+corrdf_rvb <- as.data.frame(corrdf_rvb)
+corrdf2018_rvb <- corrdf_rvb %>%
             subset(select=c(oevppct, spoepct, gruenepct, fpoepct))
 ```
+
+
 #Frauenvolksbegehren analysieren
 
 ```{r}
@@ -284,7 +290,7 @@ corrdf2018 <- corrdf %>%
 analysis_fvb <- fvb_8_3 %>%
             subset(klasse == "gem")
 
-analysis_fvb <- analysis_fvb %>% left_join(data, by=c("gkz", "gkz")) %>%
+analysis_fvb <- analysis_fvb %>% left_join(contextdata, by=c("gkz", "gkz")) %>%
     mutate(
       pct = Summe/Wahlberechtigte*100, 
       pct_u = Eintragungen/Wahlberechtigte*100,
@@ -363,8 +369,9 @@ fvb97
 ```
 
 
+
 ```{r}
-bl <- unterstuetzungen_8_3 %>%
+bl <- rauchervolksbegehren %>%
   arrange(desc(Wahlberechtigte)) %>%
   top_n(10, Wahlberechtigte) %>%
   mutate(pct = Unterstützungen/Wahlberechtigte*100)%>%
@@ -389,7 +396,7 @@ write.csv(bl, "output/datawrapper/bl.csv")
 analysis_orf <- orf %>%
             subset(klasse == "gem")
 
-analysis_orf <- analysis_orf %>% left_join(data, by=c("gkz", "gkz")) %>%
+analysis_orf <- analysis_orf %>% left_join(contextdata, by=c("gkz", "gkz")) %>%
     mutate(
       pct = Summe/Wahlberechtigte*100,
       pctu = Unterstützungen/Wahlberechtigte*100, 
