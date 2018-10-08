@@ -207,7 +207,7 @@ analysis_rvb_r$typ[analysis_rvb_r$typ=="4"] <-"Ländlicher Raum"
 analysis_rvb_r <- plyr::rbind.fill(analysis_rvb_r,analysis_rvb_t)
 
 
-write.csv2(analysis_r, "output/datawrapper/analysis_r.csv")
+write.csv2(analysis_rvb_r, "output/datawrapper/analysis_r.csv")
 
 analysis_rvb_gem <- analysis_rvb %>%
   mutate(tkbl = (fpoe+oevp)/gültig*100) %>%
@@ -255,7 +255,7 @@ wbez_rvb <- rauchervolksbegehren %>%
             subset(gkz>90001)%>%
   mutate(pct= Summe/Wahlberechtigte*100)%>%
   select(c(Name, pct))
-write.csv(wbez, "output/datawrapper/wbez.csv")
+write.csv(wbez_rvb, "output/datawrapper/wbez.csv")
 
 
 
@@ -263,7 +263,7 @@ write.csv(wbez, "output/datawrapper/wbez.csv")
 
 
 ```{r}
-corrdf <- analysis_rvb %>%
+corrdf_rvb <- analysis_rvb %>%
   mutate(fpoepct = fpoe/gültig*100, 
          spoepct = spoe/gültig*100, 
          oevppct = oevp/gültig*100, 
@@ -274,7 +274,7 @@ corrdf <- analysis_rvb %>%
 select(gkz, pct, fpoepct, spoepct, oevppct, gruenepct, tkbl, spgrneo, wb) %>%
   na.omit()
 
-corrdf_rvb <- cor(corrdf, use="pairwise.complete.obs")
+corrdf_rvb <- cor(corrdf_rvb, use="pairwise.complete.obs")
 round(corrdf_rvb, digits=2)
 
 corrdf_rvb <- as.data.frame(corrdf_rvb)

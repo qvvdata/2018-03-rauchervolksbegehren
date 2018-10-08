@@ -22,7 +22,7 @@ source("scripts/BorderMan.R")
 #                                "numeric"))%>%
 #   numerize(vars = c("name"))
 
-rauchervolksbegehren <- read_excel("input/rauchervolksbegehren_2018-10-05.xlsx")%>%
+rauchervolksbegehren <- read_excel("input/rauchervolksbegehren_2018-10-08.xlsx")%>%
   mutate(gkz = gsub('G', '', GKZ), 
          number = nchar(gkz))%>%
   subset(number ==5)%>%

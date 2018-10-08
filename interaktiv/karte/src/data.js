@@ -11,6 +11,7 @@ maps['raucherbegehren'] = {
   colorschemes: [['#000'],
             ['#D0CEDB','#B1ADC3','#938DAB','#746C93','#564C7C']
   ],
+  detail: 'Stand: 8. Oktober 2018 (Vorläufiges Endergebnis)',
 
   tooltip: function(d, p, pctfmt, numfmt) {
     if(d) {
