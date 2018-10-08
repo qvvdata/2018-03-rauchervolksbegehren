@@ -211,13 +211,12 @@ write.csv2(analysis_rvb_r, "output/datawrapper/analysis_r.csv")
 
 analysis_rvb_gem <- analysis_rvb %>%
   mutate(tkbl = (fpoe+oevp)/gültig*100) %>%
-  select(gkz, pct_diff, Summe, Wahlberechtigte, pct, Name, tkbl)%>%
+  select(gkz, pct, pct_diff, Summe, Wahlberechtigte, pct, Name, tkbl, `urbanländlich`)%>%
   rename( 
          Anteil = pct, 
          Unterschriften = Summe,
          `türkis/blau-Anteil` = tkbl) %>%
-  mutate(Anteil = round(Anteil, 2))%>%
-  select(gkz, Anteil, Unterschriften, pct_diff, Wahlberechtigte,Name)
+  mutate(Anteil = round(Anteil, 2))
 
 
 #Hier werden nun klassen für analysis_gem zugewiesen
@@ -235,14 +234,17 @@ analysis_rvb_gem$klasse <- analysis_rvb_gem$cut
 
 analysis_rvb_gem <- analysis_rvb_gem %>%
   mutate(klasse = gsub('%', '', klasse))%>%
-  numerize(vars = c("Name", "cut"))%>%
+  numerize(vars = c("Name", "cut", "urbanländlich"))%>%
   mutate(klasse =  if_else(klasse <=30, "unterdurchschnittlich",
                                    if_else(klasse >= 40 & klasse <=60, "durchschnittlich",
                                            if_else(klasse >= 60, "überdurchschnittlich","n.v.")))) %>%
   rename(gkz_neu = gkz)
   
 
-write.csv(analysis_rvb_gem, "interaktiv/karte/dist/analysis_gem.csv",fileEncoding='UTF-8',row.names = F)
+write.csv(analysis_rvb_gem %>%
+  select(gkz_neu, Anteil, Unterschriften, pct_diff, Wahlberechtigte,Name), "interaktiv/karte/dist/analysis_gem.csv",fileEncoding='UTF-8',row.names = F)
+write.csv2(analysis_rvb_gem %>% select(gkz_neu, Anteil, `türkis/blau-Anteil`, `urbanländlich`, Unterschriften) %>% rename(tkbl=`türkis/blau-Anteil`, gkz=gkz_neu, pct=Anteil, Summe=Unterschriften), "output/datawrapper/analysis_rvb_gem.csv")
+
 
 
 #Bundesländer berechnen
