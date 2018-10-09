@@ -294,7 +294,7 @@ corrdf2018_rvb <- corrdf_rvb %>%
 
 ```{r}
 #Analyse
-analysis_fvb <- fvb_8_3 %>%
+analysis_fvb <- frauenvolksbegehren %>%
             subset(klasse == "gem")
 
 analysis_fvb <- analysis_fvb %>% left_join(contextdata, by=c("gkz", "gkz")) %>%
@@ -344,19 +344,19 @@ analysis_fvb_gem <- analysis_fvb %>%
 write.csv2(analysis_fvb_gem, "output/datawrapper/analysis_fvb_gem.csv")
 
 #Bundesländer berechnen
-bl_fvb  <- fvb_8_3 %>%
+bl_fvb  <- frauenvolksbegehren %>%
             subset(klasse == "bl" | gkz == "90001")%>%
   mutate(pct=Summe/Wahlberechtigte*100)
 
 #Wiener Bundesländer
-wbez_fvb <- fvb_8_3 %>%
+wbez_fvb <- frauenvolksbegehren %>%
             subset(gkz>90001)%>%
   mutate(pct=Summe/Wahlberechtigte*100)%>%
   select(c(Name, pct))
 write.csv2(wbez_fvb, "output/datawrapper/wbez_fvb.csv")
 
 #Bezirksanalyse mit 1994
-fvbbez <- fvb_8_3 %>%
+fvbbez <- frauenvolksbegehren %>%
             subset(klasse =="bez" | gkz=="90001")%>%
           mutate(bkz = substr(gkz, 1, 3))%>%
   numerize(vars = c("Name", "klasse")) 
@@ -370,7 +370,22 @@ fvbbez_altneu <- fvb97 %>% left_join(fvbbez, by=c("bkz", "bkz")) %>%
 
 write.csv2(fvbbez_altneu, "output/datawrapper/fvbbez_altneu.csv")
 
-write.csv2(analysis_fvb_gem, "output/datawrapper/analysis_fvb_gem_alle.csv")
+
+
+
+analysis_fvb_gem_wien <- analysis_fvb_gem %>% filter(gkz>90000) %>% summarise(
+  gkz=90000,
+  Summe=sum(Summe),
+  Unterstützungen=sum(Unterstützungen),
+  Wahlberechtigte=sum(Wahlberechtigte),
+  `Anteil`=round(Summe/Wahlberechtigte*100,2),
+  `Anteil Unterstützungsphase`=round(Unterstützungen/Wahlberechtigte*100,2),
+  Steigerung=`Anteil`-`Anteil Unterstützungsphase`,
+  Name="Wien"
+) %>% select(-`Anteil Unterstützungsphase`)
+
+write.csv(analysis_fvb_gem %>% bind_rows(analysis_fvb_gem_wien) %>%
+    left_join(gemeindezusammenlegungen, by=c(gkz="gkz_neu")) %>% mutate(gkz = case_when(is.na(gkz_alt) ~ gkz, TRUE ~ gkz_alt)) %>% select(-name_alt,-gkz_alt), "output/datawrapper/analysis_fvb_gem_alle.csv")
 
 fvb97
 ```

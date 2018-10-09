@@ -48,7 +48,7 @@ rauchervolksbegehren_check <- rauchervolksbegehren%>%
             sumsum = sum(Summe))
 
 #Daten des Frauenvolksbegehrens reinladen
-fvb_8_3 <- read_excel("input/fvb_april.xlsx")%>%
+frauenvolksbegehren <- read_excel("input/fvb_2018-10-08.xlsx")%>%
   mutate(gkz = gsub('G', '', GKZ), 
          number = nchar(gkz))%>%
   subset(number ==5)%>%
