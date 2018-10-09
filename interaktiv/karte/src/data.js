@@ -15,7 +15,7 @@ maps['raucherbegehren'] = {
 
   tooltip: function(d, p, pctfmt, numfmt) {
     if(d) {
-      return `<strong>${p.name}</strong>: <br/>`
+      return `<strong>${d.Name}</strong>: <br/>`
         +`Unterschriften: ${numfmt(d['Unterschriften'])}<br />`
         +`Wahlberechtigte: ${numfmt(d['Wahlberechtigte'])}<br />`
         +`Anteil: <strong>${pctfmt(d['Anteil'])} %</strong><br />`
@@ -26,6 +26,36 @@ maps['raucherbegehren'] = {
     }
   }
 };
+
+
+maps['orfbegehren'] = {
+  title: 'Wo die Zustimmung zum Volksbegehren „ORF ohne Zwangsgebühren" am höchsten ist',
+  bundesland_title: 'XXXX',
+  bundesland_message: 'YYY <a href="http://add.at/014_01" target="_blank">Addendum.org</a>.',
+  csv: 'analysis_gem_orf.csv',
+  source: 'CPÖ',
+  value: 'Anteil',
+  scale: 'quantile',
+  colorschemes: [['#000'],
+            ['#dacbe5','#b599cb','#9069b1','#693a97','#3f007d']
+            //['#dacbe5','#3f007d']
+  ],
+  detail: 'Stand: 8. Oktober 2018 (Vorläufiges Endergebnis)',
+
+  tooltip: function(d, p, pctfmt, numfmt) {
+    if(d) {
+      return `<strong>${d.Name}</strong>: <br/>`
+        +`Unterschriften: ${numfmt(d['Unterschriften'])}<br />`
+        +`Wahlberechtigte: ${numfmt(d['Wahlberechtigte'])}<br />`
+        +`Anteil: <strong>${pctfmt(d['Anteil'])} %</strong><br />`
+        +`Steigerung in der Eintragungswoche: ${pctfmt(d['pct_diff'])}&nbsp;Prozentpunkte`
+
+    } else {
+      return `<strong>${p.name}, ${p.GKZ}</strong>: Keine Daten vorhanden`;
+    }
+  }
+};
+
 
 Object.keys(maps).map((x) => {maps[x].map=x});
 

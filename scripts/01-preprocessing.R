@@ -34,7 +34,7 @@ rauchervolksbegehren <- read_excel("input/rauchervolksbegehren_2018-10-08.xlsx")
   mutate(klasse =  if_else(Name == "Österreich", "at",
                            if_else(gkz == 90001, "bl",
          if_else(type2 == "0000" & Name !="Österreich", "bl",
-                 if_else(type2!="0000" & type1 == 0, "bez","gem"))))) 
+                 if_else(type2!="0000" & type1 == 0, "bez","gem")))))
 
 
 
@@ -81,7 +81,7 @@ fvb97 <- read_excel("input/volksbegehren97.xls") %>%
   numerize(vars = c("bezirk", "lh")) 
 
 #Volksbegehren gegen ORF reinladen
-orf <- read_excel("input/orf.xlsx")%>%
+orf <- read_excel("input/orf_2018-10-08.xlsx")%>%
   mutate(gkz = gsub('G', '', GKZ), 
          number = nchar(gkz))%>%
   subset(number ==5)%>%
@@ -94,3 +94,10 @@ orf <- read_excel("input/orf.xlsx")%>%
                            if_else(gkz == 90001, "bl",
                                    if_else(type2 == "0000" & Name !="Österreich", "bl",
                                            if_else(type2!="0000" & type1 == 0, "bez","gem"))))) 
+
+
+orf_check <- orf %>%
+  group_by(klasse)%>%
+  summarise(sumwb = sum(Wahlberechtigte), 
+            sumunt = sum(Unterstützungen),
+            sumsum = sum(Summe))

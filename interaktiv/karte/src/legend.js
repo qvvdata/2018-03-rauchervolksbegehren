@@ -98,4 +98,41 @@ legend['quantile'] = function(MAP) {
     return legend;
 };
 
+
+legend['linear'] = function(MAP) {
+    var legend = L.control({position: 'topleft'});
+    var alldata = null;
+    var myscale = null;
+
+    legend.onAdd = function (map) {
+        var div = L.DomUtil.create('div', 'info legend');
+
+        // loop through the status values and generate a label with a coloured square for each value
+        div.innerHTML = `<strong>${MAP.value}</strong><br />
+
+        `+ `${Math.min.apply(Math,alldata)} ` + MAP.colorschemes[1].map(
+        (x,i) => {
+            return `<span style="background: ${x}"></span>`;
+            }).join('')+` ${Math.round(Math.max.apply(Math,alldata))} %`
+        return div;
+    };
+
+    legend.ondata = function(data) {
+        alldata = data.map((x) => x[MAP.value]).filter((x) => !isNaN(x));
+        myscale = scale.scaleLinear().domain([Math.min.apply(Math,alldata),Math.max.apply(Math,alldata)]).range(MAP.colorschemes[1]);
+    }
+
+
+    legend.getColor = function(data) {
+      var v1 = data[MAP.value];
+      if(isNaN(v1)){
+        return MAP.colorschemes[0][0];
+      }
+
+      return myscale(v1);
+    };
+
+    return legend;
+};
+
 export {legend};
