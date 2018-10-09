@@ -481,9 +481,10 @@ analysis_orf_gem_wien <- analysis_orf_gem %>% filter(gkz>90000) %>% summarise(
   Unterstützer=sum(Unterstützer),
   Unterstützungen=sum(Unterstützungen),
   Wahlberechtigte=sum(Wahlberechtigte),
-  `Anteil gesamt`=Unterstützer/Wahlberechtigte*100,
-  `Anteil Unterstützungsphase`=Unterstützungen/Wahlberechtigte*100,
-  Steigerung=`Anteil gesamt`-`Anteil Unterstützungsphase`
+  `Anteil gesamt`=round(Unterstützer/Wahlberechtigte*100,2),
+  `Anteil Unterstützungsphase`=round(Unterstützungen/Wahlberechtigte*100,2),
+  Steigerung=`Anteil gesamt`-`Anteil Unterstützungsphase`,
+  Name="Wien"
 )
 write.csv(analysis_orf_gem %>% bind_rows(analysis_orf_gem_wien) %>% select(-pcte,-`türkis/blau-Anteil`) %>% mutate(`Anteil gesamt` = gsub('\\.',',',as.character(`Anteil gesamt`)))  %>%
     left_join(gemeindezusammenlegungen, by=c(gkz='gkz_neu')) %>% mutate(gkz = case_when(is.na(gkz_alt) ~ gkz, TRUE ~ gkz_alt)) %>% select(-name_alt,-gkz_alt), "output/datawrapper/analysis_orf_gem_alle.csv")
