@@ -17,6 +17,11 @@ numerize <- function(data,vars){
 
 #####klimavolksbegehren
 klimavolksbegehren <- read_excel("input/klimavolksbegehren_2020-06-26.xlsx")%>%
+  mutate(Wahlberechtigte=str_replace_all(Wahlberechtigte, '\\.', ''),
+         Summe=str_replace_all(Summe, '\\.', ''),
+         Unterstützungen=str_replace_all(Unterstützungen, '\\.', ''),
+         Eintragungen=str_replace_all(Eintragungen, '\\.', '')
+  ) %>% 
   mutate(gkz = gsub('G', '', GKZ), 
          number = nchar(gkz))%>%
   subset(number ==5)%>%
@@ -43,14 +48,21 @@ klimavolksbegehren_check <- klimavolksbegehren%>%
             sumsum = sum(Summe))
 
 
-nrw2019 <- read_xlsx("input/nrw2019.xlsx")#%>%
+nrw2019 <- read_xlsx("input/nrw2019.xlsx") %>% 
+  rename(gültige=`...6`,
+         ungültige=`...5`) %>% 
+  numerize(vars=c("name", "GKZ"))
+
+#%>%
 #numerize(vars = c("name"))
 #nrw2019 <- remove_teilungen(borderman(nrw2019))
 nrw2019$GKZ <- sub('.', '', nrw2019$GKZ)
 
 urbanrural <- read_excel("input/urbanrural_2019.xlsx", sheet = "DEGURBA 2019")%>%
   numerize(vars = c("name", "urbantyp", "urbanländlich")) %>% 
-  mutate(GKZ=as.character(GKZ))
+  mutate(GKZ=as.character(GKZ)) %>% 
+  rename(rurb=CODE) %>% 
+  select(GKZ, rurb)
 
 
 contextdata <- nrw2019 %>% left_join(urbanrural, by=c("GKZ"))

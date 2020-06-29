@@ -212,7 +212,7 @@ analysis_rvb_r <- plyr::rbind.fill(analysis_rvb_r,analysis_rvb_t)
 write.csv2(analysis_rvb_r, "output/datawrapper/analysis_r.csv")
 
 analysis_rvb_gem <- analysis_rvb %>%
-  mutate(tkgr = (GRÜNE+ÖVP)/as.numeric(gültig)*100) %>%
+  mutate(tkgr = (GRÜNE+ÖVP)/as.numeric(gültige)*100) %>%
   select(GKZ, pct, pct_diff, Summe, Wahlberechtigte, pct, Name, tkgr, rurb)%>%
   rename(Anteil = pct, 
          Unterschriften = Summe,
@@ -265,6 +265,7 @@ write.csv(wbez_rvb, "output/datawrapper/wbez.csv")
 
 ```{r}
 corrdf_rvb <- analysis_rvb %>%
+  rename(gültig=gültige) %>% 
   mutate(fpoepct = FPÖ/gültig*100, 
          spoepct = SPÖ/gültig*100, 
          oevppct = ÖVP/gültig*100, 
@@ -272,7 +273,7 @@ corrdf_rvb <- analysis_rvb %>%
          neospct= NEOS/gültig*100,
          tkgr = (ÖVP+GRÜNE)/gültig*100, 
          spfpneo = (SPÖ+FPÖ+NEOS)/gültig*100, 
-         wb = abgegeben/gültig*100,
+         wb = Stimmen/gültig*100,
          GKZ=as.numeric(GKZ)) %>%
 select(GKZ, pct, fpoepct, spoepct, oevppct, gruenepct, tkgr, spfpneo, wb) %>%
   na.omit()
