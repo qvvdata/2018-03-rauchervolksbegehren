@@ -1,0 +1,322 @@
+---
+title: "Unterstützer des Klimaschutz-Volksbegehrens"
+subtitle: "Auswertungen"
+author: "Stefanie Braunisch"
+date: "06-2020"
+output:
+  html_document:
+    code_folding: show
+    toc: yes
+    toc_float: 
+      collapsed: false
+      smooth_scroll: false
+---
+
+
+```{r, echo=FALSE}
+# CONFIG
+user_name <- "qvvdata" # your Git username (only needed if
+# you want to deploy to GH pages)
+project_name <- "klimavolksbegehren" # adapt!
+package_date <- "2020-06-29" # date of the CRAN snapshot that
+# the checkpoint package uses
+```
+
+## Notes
+
+This report was generated on `r Sys.time()`.
+
+...
+
+### R-Script & data
+
+The preprocessing and analysis of the data was conducted in the [R project for statistical computing](https://www.r-project.org/). The RMarkdown script used to generate this document and all the resulting data can be downloaded [under this link](http://`r user_name`.github.io/`r project_name`/rscript.zip). Through executing `main.Rmd`, the herein described process can be reproduced and this document can be generated. In the course of this, data from the folder `ìnput` will be processed and results will be written to `output`. 
+
+### GitHub
+
+The code for the herein described process can also be freely downloaded from [https://github.com/`r user_name`/`r project_name`](https://github.com/`r user_name`/`r project_name`). 
+
+
+### License
+
+...
+
+### `xyz.csv` 
+
+...
+
+## Preparations
+
+```{r, echo=FALSE}
+detach_all_packages <- function() {
+  basic_packages_blank <-  c("stats",
+                             "graphics",
+                             "grDevices",
+                             "utils",
+                             "datasets",
+                             "methods",
+                             "base")
+  basic_packages <- paste("package:", basic_packages_blank, sep = "")
+
+  package_list <- search()[
+    ifelse(unlist(gregexpr("package:", search())) == 1, TRUE, FALSE)]
+
+  package_list <- setdiff(package_list, basic_packages)
+
+  if (length(package_list) > 0)  for (package in package_list) {
+    detach(package, character.only = TRUE, unload = TRUE)
+    print(paste("package ", package, " detached", sep = ""))
+  }
+}
+
+detach_all_packages()
+
+# this allows multiple persons to use the same RMarkdown
+# without adjusting the working directory by themselves all the time
+source("scripts/csf.R")
+path_to_wd <- csf() # if this - for some reason - does not work, 
+# replace with a hardcoded path, like so: "~/projects/rddj-template/analysis/"
+if ( is.null(path_to_wd) | !dir.exists(path_to_wd)) {
+  print("WARNING: No working directory specified for current user")
+} else {
+  setwd(path_to_wd)
+}
+```
+
+
+### Define packages
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+# from https://mran.revolutionanalytics.com/web/packages/checkpoint/vignettes/using-checkpoint-with-knitr.html
+# if you don't need a package, remove it from here (commenting is probably not sufficient)
+# tidyverse: see https://blog.rstudio.org/2016/09/15/tidyverse-1-0-0/
+cat("
+library(tidyverse) # ggplot2, dplyr, tidyr, readr, purrr, tibble
+library(magrittr) # pipes
+library(stringr) # string manipulation
+library(readxl) # excel
+library(scales) # scales for ggplot2
+library(jsonlite) # json
+library(forcats) # easier factor handling,
+library(lintr) # code linting
+library(xlsx) #Excel
+library(googlesheets) # googlesheets (replace with googlesheets4 asap)",
+file = "manifest.R")
+```
+
+### Install packages
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+# if checkpoint is not yet installed, install it (for people using this
+# system for the first time)
+if (!require(checkpoint)) {
+  if (!require(devtools)) {
+    install.packages("devtools", repos = "http://cran.us.r-project.org")
+    require(devtools)
+  }
+  devtools::install_github("checkpoint",
+                           username = "RevolutionAnalytics",
+                           ref = "v0.3.2", # could be adapted later,
+                           # as of now (beginning of July 2017
+                           # this is the current release on CRAN)
+                           repos = "http://cran.us.r-project.org")
+  require(checkpoint)
+}
+# nolint start
+if (!dir.exists("~/.checkpoint")) {
+  dir.create("~/.checkpoint")
+}
+# nolint end
+# install packages for the specified CRAN snapshot date
+# checkpoint(snapshotDate = package_date,
+#           project = path_to_wd,
+#           verbose = T,
+#           scanForPackages = T,
+#           use.knitr = F)
+rm(package_date)
+```
+
+
+### Load packages
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+source("manifest.R")
+unlink("manifest.R")
+sessionInfo()
+```
+
+### Load additional scripts
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+# if you want to outsource logic to other script files, see README for 
+# further information
+knitr::read_chunk("scripts/theme_addendum.R")
+#source("./scripts/theme_addendum.R")
+#source("./scripts/BorderMan.R")
+source("./scripts/preprocessing_klimavolksbegehren.R")
+cat(getwd())
+#my_function(5)
+
+
+#gemeindezusammenlegungen <- read.xlsx('input/2018-gemeindezusammenlegungen.xlsx', 1)
+```
+
+
+
+## Klimavolksbegehren
+
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+options(scipen=999)
+
+#Analyse
+analysis_rvb <- klimavolksbegehren %>%
+            subset(klasse == "gem")
+
+analysis_rvb <- analysis_rvb %>% left_join(contextdata, by=c("GKZ", "GKZ")) %>%
+    mutate(
+      pct = Summe/Wahlberechtigte*100, 
+      pct_u = Unterstützungen/Wahlberechtigte*100,
+      pct_e = Eintragungen/Wahlberechtigte*100,
+      quantile = ntile(pct, 100),
+      pct_diff = pct-pct_u,
+      pct_plus = Unterstützungen/Summe*100)
+
+analysis_rvb_r <- analysis_rvb %>%
+  group_by(rurb) %>%
+  summarise(ssum = sum(Summe), 
+           vwb = sum(Wahlberechtigte),
+          usum=sum(Unterstützungen)) %>%
+  mutate(`Anteil der Unterstützer` = (usum/vwb)*100,
+        `Anteil Gesamt` = (ssum/vwb)*100,
+       Steigerung=`Anteil Gesamt`-`Anteil der Unterstützer`)
+
+analysis_rvb_t <- analysis_rvb %>%
+  group_by() %>%
+  summarise(ssum = sum(Summe), 
+            vwb = sum(Wahlberechtigte),
+            usum=sum(Unterstützungen)) %>%
+  mutate(`Anteil der Unterstützer` = (usum/vwb)*100,
+         `Anteil Gesamt` = (ssum/vwb)*100,
+         Steigerung=`Anteil Gesamt`-`Anteil der Unterstützer`)%>%
+  mutate(typ = "Österreich gesamt")
+
+analysis_rvb_r$rurb[analysis_rvb_r$rurb=="1"] <-"Urbane Zentren"
+analysis_rvb_r$rurb[analysis_rvb_r$rurb=="2"] <-"Regionale Zentren"
+analysis_rvb_r$rurb[analysis_rvb_r$rurb=="3"] <-"Ländliche Vororte"
+analysis_rvb_r$rurb[analysis_rvb_r$rurb=="4"] <-"Ländlicher Raum"
+
+analysis_rvb_r <- plyr::rbind.fill(analysis_rvb_r,analysis_rvb_t)
+
+
+write.csv2(analysis_rvb_r, "output/datawrapper/analysis_r.csv")
+
+analysis_rvb_gem <- analysis_rvb %>%
+  mutate(tkgr = (GRÜNE+ÖVP)/as.numeric(gültig)*100) %>%
+  select(GKZ, pct, pct_diff, Summe, Wahlberechtigte, pct, Name, tkgr, rurb)%>%
+  rename(Anteil = pct, 
+         Unterschriften = Summe,
+         `türkis/grün-Anteil` = tkgr) %>%
+  mutate(Anteil = round(Anteil, 2))
+
+
+#Hier werden nun klassen für analysis_gem zugewiesen
+
+einheiten <- seq(0.1,1,0.1)
+
+teiler_rvb <- quantile(analysis_rvb_gem$Anteil,probs=einheiten)
+
+analysis_rvb_gem$cut <- cut(analysis_rvb_gem$Anteil,
+                        breaks=c(0,teiler_rvb),
+                        labels=paste(seq(10,100,10),"%",sep=""),
+                        include.lowest=TRUE)
+
+analysis_rvb_gem$klasse <- analysis_rvb_gem$cut
+
+analysis_rvb_gem <- analysis_rvb_gem %>%
+  mutate(klasse = gsub('%', '', klasse))%>%
+  numerize(vars = c("Name", "cut", "urbanländlich"))%>%
+  mutate(klasse =  if_else(klasse <=30, "unterdurchschnittlich",
+                                   if_else(klasse >= 40 & klasse <=60, "durchschnittlich",
+                                           if_else(klasse >= 60, "überdurchschnittlich","n.v.")))) %>%
+  rename(gkz_neu = GKZ)
+  
+
+write.csv(analysis_rvb_gem %>% select(gkz_neu, Anteil, `türkis/grün-Anteil`, `rurb`, Unterschriften) %>% rename(tkgr=`türkis/grün-Anteil`, gkz=gkz_neu, pct=Anteil, Summe=Unterschriften), "output/datawrapper/analysis_rvb_gem.csv")
+
+
+
+#Bundesländer berechnen
+bl_rvb  <- klimavolksbegehren %>%
+            subset(klasse == "bl" | GKZ == "90001")%>%
+  mutate(pct= Summe/Wahlberechtigte*100)
+
+#Wiener Bezirke
+wbez_rvb <- klimavolksbegehren %>%
+            subset(GKZ>90001)%>%
+  mutate(pct= Summe/Wahlberechtigte*100)%>%
+  select(c(Name, pct))
+write.csv(wbez_rvb, "output/datawrapper/wbez.csv")
+
+
+
+```
+
+
+```{r}
+corrdf_rvb <- analysis_rvb %>%
+  mutate(fpoepct = FPÖ/gültig*100, 
+         spoepct = SPÖ/gültig*100, 
+         oevppct = ÖVP/gültig*100, 
+         gruenepct = GRÜNE/gültig*100, 
+         neospct= NEOS/gültig*100,
+         tkgr = (ÖVP+GRÜNE)/gültig*100, 
+         spfpneo = (SPÖ+FPÖ+NEOS)/gültig*100, 
+         wb = abgegeben/gültig*100,
+         GKZ=as.numeric(GKZ)) %>%
+select(GKZ, pct, fpoepct, spoepct, oevppct, gruenepct, tkgr, spfpneo, wb) %>%
+  na.omit()
+
+corrdf_rvb <- cor(corrdf_rvb, use="pairwise.complete.obs")
+round(corrdf_rvb, digits=2)
+
+corrdf_rvb <- as.data.frame(corrdf_rvb)
+corrdf2018_rvb <- corrdf_rvb %>%
+            subset(select=c(oevppct, spoepct, gruenepct, fpoepct))
+```
+
+
+
+```{r}
+bl <- klimavolksbegehren %>%
+  arrange(desc(Wahlberechtigte)) %>%
+  top_n(10, Wahlberechtigte) %>%
+  mutate(pct = Unterstützungen/Wahlberechtigte*100)%>%
+  arrange(desc(pct))
+write.csv(bl, "output/datawrapper/bl.csv")
+
+#Visualisierungen
+
+  # labs(title = "Schlagzeile", 
+  #      x = "Vertikale Achse", 
+  #      y = "horizontale Achse",
+  #      #subtitle ="Funktioniert aus unerklärlichen Gründen noch nicht", 
+  #      caption = "Quelle")+
+  # theme_addendum()
+
+#Exportieren für Illustrator funktioniert nicht über ggsave (Schriften), sondern besser über Export des Plot-Viewers
+```
+
+
+
+## Linting
+
+The code in this RMarkdown is listed with the [lintr package](https://github.com/jimhester/lintr), which is based on the  [tidyverse style guide](http://style.tidyverse.org/). 
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+lintr::lint("main.Rmd")
+# if you have additional scripts and want them to be linted too, add them here
+#lintr::lint("scripts/my_script.R")
+```
+
+
