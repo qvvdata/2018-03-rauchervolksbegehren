@@ -293,7 +293,7 @@ Karte <- analysis_rvb_gem %>%
 
 ###urban_rural
 print('q903u')
-Urban <- analysis_rvb_r[-c(4:6), ] %>% 
+Urban <- analysis_rvb_r[-4, ] %>% 
   select(rurb, `Anteil der Unterstützer`,`Anteil Gesamt`, `Steigerung`) %>% 
   dw_data_to_chart(chart_id ='q903u', api_key = DW_API_KEY )
 
@@ -301,6 +301,7 @@ Urban <- analysis_rvb_r[-c(4:6), ] %>%
 ##Auswertung Wien
 print('EH1y7')
 wbez_rvb %>% 
+  rename(`Anteil Unterstützer Volksbegehren`=pct, `Anteil Grünwähler`=`grün Anteil`) %>% 
   dw_data_to_chart(chart_id = 'EH1y7', api_key = DW_API_KEY)
 
 ```
