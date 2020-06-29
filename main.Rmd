@@ -99,7 +99,7 @@ library(scales) # scales for ggplot2
 library(jsonlite) # json
 library(forcats) # easier factor handling,
 library(lintr) # code linting
-library(xlsx) #Excel
+library(openxlsx) #Excel
 library(googlesheets) # googlesheets (replace with googlesheets4 asap)",
 file = "manifest.R")
 ```
