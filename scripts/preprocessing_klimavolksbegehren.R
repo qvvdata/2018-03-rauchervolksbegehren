@@ -57,7 +57,7 @@ nrw2019 <- read_xlsx("input/nrw2019.xlsx") %>%
 #nrw2019 <- remove_teilungen(borderman(nrw2019))
 nrw2019$GKZ <- sub('.', '', nrw2019$GKZ)
 
-urbanrural <- read_excel("input/urban_2020.xlsx", sheet = "DEGURBA 2020")%>%
+urbanrural <- read_excel("input/urbanrural_2019.xlsx", sheet = "DEGURBA 2019")%>%
   numerize(vars = c("name", "urbantyp", "urbanländlich")) %>% 
   mutate(GKZ=as.character(GKZ)) %>% 
   rename(rurb=CODE) %>% 
