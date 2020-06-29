@@ -299,7 +299,9 @@ Urban <- analysis_rvb_r[-c(4:6), ] %>%
 
 
 ##Auswertung Wien
-
+print('EH1y7')
+wbez_rvb %>% 
+  dw_data_to_chart(chart_id = 'EH1y7', api_key = DW_API_KEY)
 
 ```
 
