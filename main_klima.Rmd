@@ -200,19 +200,22 @@ analysis_rvb_t <- analysis_rvb %>%
   mutate(`Anteil der Unterstützer` = (usum/vwb)*100,
          `Anteil Gesamt` = (ssum/vwb)*100,
          Steigerung=`Anteil Gesamt`-`Anteil der Unterstützer`)%>%
-  mutate(typ = "Österreich gesamt")
+  mutate(typ = "Österreich gesamt") %>% 
+  rename(rurb=typ)
 
 analysis_rvb_r$rurb[analysis_rvb_r$rurb=="1"] <-"Urbane Zentren"
 analysis_rvb_r$rurb[analysis_rvb_r$rurb=="2"] <-"Regionale Zentren"
 analysis_rvb_r$rurb[analysis_rvb_r$rurb=="3"] <-"Ländliche Vororte"
 analysis_rvb_r$rurb[analysis_rvb_r$rurb=="4"] <-"Ländlicher Raum"
 
-analysis_rvb_r <- plyr::rbind.fill(analysis_rvb_r,analysis_rvb_t)
-
+analysis_rvb_r <- plyr::rbind.fill(analysis_rvb_r,analysis_rvb_t) %>% 
+  select(rurb,ssum, vwb, usum, `Anteil der Unterstützer` , `Anteil Gesamt`, Steigerung)
+  
 
 write.csv2(analysis_rvb_r, "output/datawrapper/analysis_r.csv")
 
 analysis_rvb_gem <- analysis_rvb %>%
+  rename(gültig=gültige) %>% 
   mutate(tkgr = (GRÜNE+ÖVP)/gültig*100,
          gr= GRÜNE/gültig*100,
          tk=ÖVP/gültig*100) %>%
@@ -259,12 +262,12 @@ bl_rvb  <- klimavolksbegehren %>%
 wbez_rvb <- analysis_rvb_gem %>%
             subset(GKZ>90001)%>%
   mutate(pct= Unterschriften/Wahlberechtigte*100)%>%
-  select(c(Name, pct))
-write.csv(wbez_rvb, "output/datawrapper/wbez.csv")
+  select(c(Name, pct, `grün Anteil`))
 
-##Bezirke berechnen
+##Bezirke berechnen - eher unspektakulär
 bz_rvb <- klimavolksbegehren %>% 
-  subset(klasse=="bez")
+  subset(klasse=="bez") %>% 
+  mutate(pct=Summe/Wahlberechtigte*100)
 
 ```
 ```{r}
@@ -276,14 +279,26 @@ gruen_Anteil <- analysis_rvb_gem %>%
   dw_data_to_chart(chart_id = 'bkYTF', api_key = DW_API_KEY)
   
 
-
 print('HENaC')
 tuerkis_Anteil <- analysis_rvb_gem %>% 
   select(Name, Anteil,`türkis Anteil`) %>%
   rename(`Anteil Unterstützer Volksbegehren`=Anteil, `Anteil ÖVP-Wähler`=`türkis Anteil`) %>% 
   dw_data_to_chart(chart_id = 'HENaC', api_key = DW_API_KEY)
 
+##Karte - Anteil von Wählern
+print('7Bi6D')
+Karte <- analysis_rvb_gem %>% 
+  select(Name,Anteil, GKZ) %>% 
+  dw_data_to_chart(chart_id='7Bi6D', api_key=DW_API_KEY)
 
+###urban_rural
+print('q903u')
+Urban <- analysis_rvb_r[-c(4:6), ] %>% 
+  select(rurb, `Anteil der Unterstützer`,`Anteil Gesamt`, `Steigerung`) %>% 
+  dw_data_to_chart(chart_id ='q903u', api_key = DW_API_KEY )
+
+
+##Auswertung Wien
 
 
 ```
@@ -291,7 +306,7 @@ tuerkis_Anteil <- analysis_rvb_gem %>%
 
 ```{r}
 corrdf_rvb <- analysis_rvb %>%
-  #rename(gültig=gültig) %>% 
+  rename(gültig=gültige) %>% 
   mutate(fpoepct = FPÖ/gültig*100, 
          spoepct = SPÖ/gültig*100, 
          oevppct = ÖVP/gültig*100, 
@@ -299,7 +314,7 @@ corrdf_rvb <- analysis_rvb %>%
          neospct= NEOS/gültig*100,
          tkgr = (ÖVP+GRÜNE)/gültig*100, 
          spfpneo = (SPÖ+FPÖ+NEOS)/gültig*100, 
-         wb = abgegeben/gültig*100,
+         wb = Summe/gültig*100,
          GKZ=as.numeric(GKZ)) %>%
 select(GKZ, pct, fpoepct, spoepct, oevppct, gruenepct, tkgr, spfpneo, wb) %>%
   na.omit()
