@@ -307,7 +307,7 @@ wbez_rvb %>%
 
 
 ```{r}
-corrdf_rvb <- analysis_rvb %>%
+corrdf_rvb_base <- analysis_rvb %>%
   rename(gültig=gültige) %>% 
   mutate(fpoepct = FPÖ/gültig*100, 
          spoepct = SPÖ/gültig*100, 
@@ -321,7 +321,7 @@ corrdf_rvb <- analysis_rvb %>%
 select(GKZ, pct, fpoepct, spoepct, oevppct, gruenepct, tkgr, spfpneo, wb) %>%
   na.omit()
 
-corrdf_rvb <- cor(corrdf_rvb, use="pairwise.complete.obs")
+corrdf_rvb <- cor(corrdf_rvb_base, use="pairwise.complete.obs")
 round(corrdf_rvb, digits=2)
 
 corrdf_rvb <- as.data.frame(corrdf_rvb)
@@ -329,7 +329,17 @@ corrdf2018_rvb <- corrdf_rvb %>%
             subset(select=c(oevppct, spoepct, gruenepct, fpoepct))
 ```
 
+```{r}
+partylm <- lm(pct ~ fpoepct + spoepct + oevppct + gruenepct, corrdf_rvb_base)
 
+summary(partylm)
+```
+```{r}
+summary(lm(pct ~ fpoepct, corrdf_rvb_base))
+```
+```{r}
+summary(lm(pct ~ oevppct, corrdf_rvb_base))
+```
 
 ```{r}
 bl <- klimavolksbegehren %>%
@@ -359,6 +369,11 @@ write.csv(wbez_rvb, "output/datawrapper/wbez.csv")
 #Exportieren für Illustrator funktioniert nicht über ggsave (Schriften), sondern besser über Export des Plot-Viewers
 ```
 
+```{r}
+write.csv(analysis_rvb_gem %>%
+  select(GKZ, Anteil, Unterschriften, pct_diff, Wahlberechtigte,Name), "interaktiv/karte/dist/analysis_klimavolksbegehren.csv",fileEncoding='UTF-8',row.names = F)
+
+```
 
 
 ## Linting
