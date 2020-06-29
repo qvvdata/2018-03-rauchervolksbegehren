@@ -37,7 +37,6 @@ klimavolksbegehren <- read_excel("input/klimavolksbegehren_2020-06-26.xlsx")%>%
   rename(GKZ=gkz) %>% 
   mutate(GKZ=as.character(GKZ))
 
-
 #check der datenintegrität
 #Bezirke aufgrund von Status Wiens als Bezirk und Gemeinde nicht übereinstimmend
 
@@ -66,5 +65,4 @@ urbanrural <- read_excel("input/urbanrural_2019.xlsx", sheet = "DEGURBA 2019")%>
 
 
 contextdata <- nrw2019 %>% left_join(urbanrural, by=c("GKZ"))
-
 

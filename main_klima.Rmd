@@ -101,6 +101,7 @@ library(forcats) # easier factor handling,
 library(lintr) # code linting
 library(xlsx) #Excel
 library(googlesheets) # googlesheets (replace with googlesheets4 asap)",
+library(DatawRappr),
 file = "manifest.R")
 ```
 
@@ -140,7 +141,7 @@ rm(package_date)
 ### Load packages
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
-source("manifest.R")
+#source("manifest.R")
 unlink("manifest.R")
 sessionInfo()
 ```
@@ -212,11 +213,15 @@ analysis_rvb_r <- plyr::rbind.fill(analysis_rvb_r,analysis_rvb_t)
 write.csv2(analysis_rvb_r, "output/datawrapper/analysis_r.csv")
 
 analysis_rvb_gem <- analysis_rvb %>%
-  mutate(tkgr = (GRÜNE+ÖVP)/as.numeric(gültige)*100) %>%
-  select(GKZ, pct, pct_diff, Summe, Wahlberechtigte, pct, Name, tkgr, rurb)%>%
+  mutate(tkgr = (GRÜNE+ÖVP)/gültig*100,
+         gr= GRÜNE/gültig*100,
+         tk=ÖVP/gültig*100) %>%
+  select(GKZ, pct, pct_diff, Summe, Wahlberechtigte, pct, Name, tkgr,gr, tk, rurb)%>%
   rename(Anteil = pct, 
          Unterschriften = Summe,
-         `türkis/grün-Anteil` = tkgr) %>%
+         `türkis/grün-Anteil` = tkgr,
+         `türkis Anteil` = tk,
+         `grün Anteil`= gr)%>%
   mutate(Anteil = round(Anteil, 2))
 
 
@@ -238,11 +243,10 @@ analysis_rvb_gem <- analysis_rvb_gem %>%
   numerize(vars = c("Name", "cut", "urbanländlich"))%>%
   mutate(klasse =  if_else(klasse <=30, "unterdurchschnittlich",
                                    if_else(klasse >= 40 & klasse <=60, "durchschnittlich",
-                                           if_else(klasse >= 60, "überdurchschnittlich","n.v.")))) %>%
-  rename(gkz_neu = GKZ)
-  
+                                           if_else(klasse >= 60, "überdurchschnittlich","n.v.")))) 
 
-write.csv(analysis_rvb_gem %>% select(gkz_neu, Anteil, `türkis/grün-Anteil`, `rurb`, Unterschriften) %>% rename(tkgr=`türkis/grün-Anteil`, gkz=gkz_neu, pct=Anteil, Summe=Unterschriften), "output/datawrapper/analysis_rvb_gem.csv")
+
+write.csv(analysis_rvb_gem %>% select(GKZ,Name, Anteil, `türkis/grün-Anteil`, `türkis Anteil`, `grün Anteil`, `rurb`, Unterschriften) %>% rename(tkgr=`türkis/grün-Anteil`, pct=Anteil, Summe=Unterschriften), "output/datawrapper/analysis_rvb_gem.csv")
 
 
 
@@ -252,11 +256,33 @@ bl_rvb  <- klimavolksbegehren %>%
   mutate(pct= Summe/Wahlberechtigte*100)
 
 #Wiener Bezirke
-wbez_rvb <- klimavolksbegehren %>%
+wbez_rvb <- analysis_rvb_gem %>%
             subset(GKZ>90001)%>%
-  mutate(pct= Summe/Wahlberechtigte*100)%>%
+  mutate(pct= Unterschriften/Wahlberechtigte*100)%>%
   select(c(Name, pct))
 write.csv(wbez_rvb, "output/datawrapper/wbez.csv")
+
+##Bezirke berechnen
+bz_rvb <- klimavolksbegehren %>% 
+  subset(klasse=="bez")
+
+```
+```{r}
+DW_API_KEY <- "68cfebfe1fa4a7a517b9d8fd806392c4fceac44c7a35cc72c1298b708e54d465"
+print('bkYTF')
+gruen_Anteil <- analysis_rvb_gem %>% 
+  select(Name, Anteil,`grün Anteil`) %>%
+  rename(`Anteil Unterstützer Volksbegehren`=Anteil, `Anteil Grünwähler`=`grün Anteil`) %>% 
+  dw_data_to_chart(chart_id = 'bkYTF', api_key = DW_API_KEY)
+  
+
+
+print('HENaC')
+tuerkis_Anteil <- analysis_rvb_gem %>% 
+  select(Name, Anteil,`türkis Anteil`) %>%
+  rename(`Anteil Unterstützer Volksbegehren`=Anteil, `Anteil ÖVP-Wähler`=`türkis Anteil`) %>% 
+  dw_data_to_chart(chart_id = 'HENaC', api_key = DW_API_KEY)
+
 
 
 
@@ -265,7 +291,7 @@ write.csv(wbez_rvb, "output/datawrapper/wbez.csv")
 
 ```{r}
 corrdf_rvb <- analysis_rvb %>%
-  rename(gültig=gültige) %>% 
+  #rename(gültig=gültig) %>% 
   mutate(fpoepct = FPÖ/gültig*100, 
          spoepct = SPÖ/gültig*100, 
          oevppct = ÖVP/gültig*100, 
@@ -273,7 +299,7 @@ corrdf_rvb <- analysis_rvb %>%
          neospct= NEOS/gültig*100,
          tkgr = (ÖVP+GRÜNE)/gültig*100, 
          spfpneo = (SPÖ+FPÖ+NEOS)/gültig*100, 
-         wb = Stimmen/gültig*100,
+         wb = abgegeben/gültig*100,
          GKZ=as.numeric(GKZ)) %>%
 select(GKZ, pct, fpoepct, spoepct, oevppct, gruenepct, tkgr, spfpneo, wb) %>%
   na.omit()
@@ -295,6 +321,14 @@ bl <- klimavolksbegehren %>%
   mutate(pct = Unterstützungen/Wahlberechtigte*100)%>%
   arrange(desc(pct))
 write.csv(bl, "output/datawrapper/bl.csv")
+
+
+#Wiener Bezirke
+wbez_rvb <- klimavolksbegehren %>%
+            subset(GKZ>90001)%>%
+  mutate(pct= Summe/Wahlberechtigte*100)%>%
+  select(c(Name, pct))
+write.csv(wbez_rvb, "output/datawrapper/wbez.csv")
 
 #Visualisierungen
 
