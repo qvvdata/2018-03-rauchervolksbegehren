@@ -16,7 +16,7 @@ numerize <- function(data,vars){
 #source("scripts/BorderMan.R")
 
 #####klimavolksbegehren
-klimavolksbegehren <- read_excel("input/klimavolksbegehren_2020-06-26.xlsx")%>%
+klimavolksbegehren <- read_excel("input/klimavolksbegehren_final.xlsx")%>%
   mutate(Wahlberechtigte=str_replace_all(Wahlberechtigte, '\\.', ''),
          Summe=str_replace_all(Summe, '\\.', ''),
          Unterstützungen=str_replace_all(Unterstützungen, '\\.', ''),

@@ -249,9 +249,6 @@ analysis_rvb_gem <- analysis_rvb_gem %>%
                                            if_else(klasse >= 60, "überdurchschnittlich","n.v.")))) 
 
 
-write.csv(analysis_rvb_gem %>% select(GKZ,Name, Anteil, `türkis/grün-Anteil`, `türkis Anteil`, `grün Anteil`, `rurb`, Unterschriften) %>% rename(tkgr=`türkis/grün-Anteil`, pct=Anteil, Summe=Unterschriften), "output/datawrapper/analysis_rvb_gem.csv")
-
-
 
 #Bundesländer berechnen
 bl_rvb  <- klimavolksbegehren %>%
@@ -293,10 +290,10 @@ Karte <- analysis_rvb_gem %>%
 
 ###urban_rural
 print('q903u')
-Urban <- analysis_rvb_r[-4, ] %>% 
+Urban <- analysis_rvb_r [-1,] %>% 
   select(rurb, `Anteil der Unterstützer`,`Anteil Gesamt`, `Steigerung`) %>% 
   dw_data_to_chart(chart_id ='q903u', api_key = DW_API_KEY )
-
+write_csv(analysis_rvb_r [-4, ], "output/datawrapper/urban.csv")
 
 ##Auswertung Wien
 print('EH1y7')
